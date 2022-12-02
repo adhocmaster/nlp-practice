@@ -24,7 +24,7 @@ def treebankToWordnetPOS(treebankTag: str) -> str:
         return wordnet.NOUN
     
     
-def lemmatize(docs: Iterable[str]) -> List[Tuple[str, str]]:
+def lemmatize(docs: Iterable[str]) -> List[str]:
     
     lemmatizer = WordNetLemmatizer()
     
@@ -107,7 +107,7 @@ def buildWordToIndex(
 #     for w, wIndex in wordToIndex.items():
         
 
-def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int]) -> np.ndarray:
+def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int], lowercase=True) -> np.ndarray:
     tf = np.zeros((len(docs), len(wordToIndex)))
     
     row = 0
@@ -116,11 +116,11 @@ def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int]) -> np.nd
         # print(fMap)
         # assuming dictionary has more unique words than a doc, we iterate over dic words
         for dicWord, freq in fMap.items():
+            if lowercase:
+                dicWord = dicWord.lower()
             if dicWord in wordToIndex:
                 wordIndex = wordToIndex[dicWord]
                 tf[row][wordIndex] = freq
-            else:
-                print(f"{dicWord} is not in the doc")
                 
         row += 1
     
