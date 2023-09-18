@@ -29,7 +29,7 @@ def lemmatize(docs: Iterable[str]) -> List[str]:
     lemmatizer = WordNetLemmatizer()
     
     output = []
-    for rawDoc in tqdm(docs, desc = "lemmatizing", position=0):
+    for rawDoc in tqdm(docs, desc = "lemmatizing", position=0, disable=True):
         # break, get tags, remake sentence
         wordsAndTags = nltk.pos_tag(word_tokenize(rawDoc))
         lemmatizedWs = [lemmatizer.lemmatize(word, treebankToWordnetPOS(tag)) 
@@ -47,7 +47,7 @@ def getWordFrequency(
     ) -> Counter[str]:
     
     fMap = collections.Counter()
-    for doc in tqdm(docs, desc="counting words", position=0):
+    for doc in tqdm(docs, desc="counting words", position=0, disable=True):
         words = tokenizer(doc)
         if lowercase:
             words = [word.lower() for word in words]
@@ -69,11 +69,14 @@ def getTopWords(
     
     # remove stop words
     if stopWords is not None:
-        for stopWord in tqdm(stopWords, desc="removing stop words", position=0):
+        for stopWord in tqdm(stopWords, desc="removing stop words", position=0, disable=True):
             del fMap[stopWord]
         
     # choose maxSize words based on frequency
-    return heapq.nlargest(maxSize, fMap.keys(), fMap.__getitem__)
+    topWords =  heapq.nlargest(maxSize, fMap.keys(), fMap.__getitem__)
+    for i in range(10):
+        print(topWords[i], fMap[topWords[i]])
+    return topWords
 
 def buildWordToIndex(
         tokenizer, 
@@ -107,12 +110,12 @@ def buildWordToIndex(
 #     for w, wIndex in wordToIndex.items():
         
 
-def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int], lowercase=True) -> np.ndarray:
+def getTermFreqMatrix(tokenizer, docs: Iterable[str], wordToIndex: Dict[str, int], lowercase=True) -> np.ndarray:
     tf = np.zeros((len(docs), len(wordToIndex)))
     
     row = 0
     for doc in docs:
-        fMap = collections.Counter(doc)
+        fMap = getWordFrequency(tokenizer, [doc], lowercase=lowercase)
         # print(fMap)
         # assuming dictionary has more unique words than a doc, we iterate over dic words
         for dicWord, freq in fMap.items():
@@ -120,6 +123,7 @@ def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int], lowercas
                 dicWord = dicWord.lower()
             if dicWord in wordToIndex:
                 wordIndex = wordToIndex[dicWord]
+                # print(dicWord, freq, row, wordIndex)
                 tf[row][wordIndex] = freq
                 
         row += 1
@@ -127,4 +131,8 @@ def getTermFreqMatrix(docs: Iterable[str], wordToIndex: Dict[str, int], lowercas
     return tf
         
     
+def getDf(tf: npt.NDArray) -> npt.NDArray:
+    exists = tf > 0
+    return exists.sum(axis=0)
     
+
