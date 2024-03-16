@@ -4,6 +4,7 @@ import heapq
 from tqdm import tqdm
 
 import numpy as np
+import numpy.typing as npt
 
 import nltk
 from nltk import word_tokenize
@@ -11,7 +12,19 @@ from nltk.corpus import wordnet
 from nltk.stem import WordNetLemmatizer, PorterStemmer
 
 
-def treebankToWordnetPOS(treebankTag: str) -> str:
+Text = str
+LemmatizedText = str
+Sentence = str
+Word = str
+WordRoot = str
+TreeBankTag = str
+WordNetTag = str
+Token = int
+Index = int
+Label = int
+
+
+def treebankToWordnetPOS(treebankTag: TreeBankTag) -> WordNetTag:
     if treebankTag.startswith("J"):
         return wordnet.ADJ
     if treebankTag.startswith("V"):
@@ -24,7 +37,7 @@ def treebankToWordnetPOS(treebankTag: str) -> str:
         return wordnet.NOUN
     
     
-def lemmatize(docs: Iterable[str]) -> List[str]:
+def lemmatize(docs: Iterable[Text]) -> List[LemmatizedText]:
     
     lemmatizer = WordNetLemmatizer()
     
@@ -41,10 +54,10 @@ def lemmatize(docs: Iterable[str]) -> List[str]:
     
 def getWordFrequency(
         tokenizer, 
-        docs: Iterable[str],
+        docs: Iterable[LemmatizedText],
         lowercase=True,
         ignorePunkt=True
-    ) -> Counter[str]:
+    ) -> Counter[WordRoot]:
     
     fMap = collections.Counter()
     for doc in tqdm(docs, desc="counting words", position=0, disable=True):
@@ -58,14 +71,14 @@ def getWordFrequency(
     
 def getTopWords(
         tokenizer, 
-        docs: Iterable[str], 
+        docs: Iterable[LemmatizedText], 
         maxSize=2000, 
         stopWords=None,
         lowercase=True,
         ignorePunkt=True
-    ) -> List[str]:
+    ) -> List[WordRoot]:
     # frequency of words
-    fMap = getWordFrequency(tokenizer, docs)
+    fMap = getWordFrequency(tokenizer, docs, lowercase=lowercase, ignorePunkt=ignorePunkt)
     
     # remove stop words
     if stopWords is not None:
@@ -74,18 +87,19 @@ def getTopWords(
         
     # choose maxSize words based on frequency
     topWords =  heapq.nlargest(maxSize, fMap.keys(), fMap.__getitem__)
+    print(f"*** top 10 words out of {len(fMap)} words***")
     for i in range(10):
         print(topWords[i], fMap[topWords[i]])
     return topWords
 
 def buildWordToIndex(
         tokenizer, 
-        docs: Iterable[str], 
+        docs: Iterable[LemmatizedText], 
         maxSize=2000, 
         stopWords=None,
         lowercase=True,
         ignorePunkt=True
-    ) -> Dict[str, int]:
+    ) -> Dict[WordRoot, Index]:
     
     topWords = getTopWords(
         tokenizer, 
@@ -101,8 +115,22 @@ def buildWordToIndex(
     for w in topWords:
         wToI[w] = index
         index += 1
-    
+    wToI["UNK"] = len(wToI)
     return wToI
+
+def lowerUnPunkt(words: List[Word]) -> List[Word]:
+    words = [word.lower() for word in words]
+    words = [word for word in words if word.isalnum()]
+    return words
+
+def tokenizeDoc(tokenizer, doc: LemmatizedText, wordToIndex: Dict[WordRoot, Token]) -> List[Token]:
+    words = tokenizer(doc)
+    words = lowerUnPunkt(words)
+    return [wordToIndex[w] 
+                if w in wordToIndex 
+                else wordToIndex["UNK"]
+            for w in words]
+
 
 # def getTermFreqDoc(doc: str, wordToIndex: Dict[str, int]):
 #     fMap = collections.Counter(doc)
@@ -110,7 +138,7 @@ def buildWordToIndex(
 #     for w, wIndex in wordToIndex.items():
         
 
-def getTermFreqMatrix(tokenizer, docs: Iterable[str], wordToIndex: Dict[str, int], lowercase=True) -> np.ndarray:
+def getTermFreqMatrix(tokenizer, docs: Iterable[LemmatizedText], wordToIndex: Dict[WordRoot, Token], lowercase=True) -> np.ndarray:
     tf = np.zeros((len(docs), len(wordToIndex)))
     
     row = 0
