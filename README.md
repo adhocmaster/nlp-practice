@@ -18,3 +18,4 @@ Each notebook sets the current working directory to the root of the repository. 
 1. [Document Classification with Bag-of-Words](./tasks/document-classfication-bow.ipynb)
 2. [Movie recommender with TD-iDF](./tasks/movie-recommender-tfidf.ipynb)
 3. [Text Classification with Naive Bayes](./tasks/text-classifier-bayes-poet.ipynb)
+4. [Text Generation with Naive Bayes](./tasks/text-generator-bayes-poet.ipynb)
