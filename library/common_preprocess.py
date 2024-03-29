@@ -22,6 +22,9 @@ WordNetTag = str
 Token = int
 Index = int
 Label = int
+ColumnVector = npt.NDArray
+RowVector = npt.NDArray
+Dictionary = Dict[Word, Token]
 
 
 def treebankToWordnetPOS(treebankTag: TreeBankTag) -> WordNetTag:
@@ -162,5 +165,12 @@ def getTermFreqMatrix(tokenizer, docs: Iterable[LemmatizedText], wordToIndex: Di
 def getDf(tf: npt.NDArray) -> npt.NDArray:
     exists = tf > 0
     return exists.sum(axis=0)
+
+
+def oneHotColumn(word: Word, wordToIndex: Dictionary) -> ColumnVector:
+    hot = np.zeros((len(wordToIndex), 1))
+    hotIdx = wordToIndex[word]
+    hot[hotIdx] = 1
+    return hot
     
 
