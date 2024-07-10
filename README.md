@@ -19,3 +19,8 @@ Each notebook sets the current working directory to the root of the repository. 
 2. [Movie recommender with TD-iDF](./tasks/movie-recommender-tfidf.ipynb)
 3. [Text Classification with Naive Bayes](./tasks/text-classifier-bayes-poet.ipynb)
 4. [Text Generation with Naive Bayes](./tasks/text-generator-bayes-poet.ipynb)
+
+## 2.3 NN Methods
+
+### Fine-tuning
+1. [Fine Tuning Llama2 with LoRA](./tasks/fine-tuning/LoRA-Llama2.ipynb)
